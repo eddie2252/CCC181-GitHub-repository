@@ -1,1 +1,3 @@
 # CCC181-GitHub-repository
+
+EDfly is a queue management system for a passport office, where people register an appointment online, get a schedule to fill up their forms, and later get a second schedule to claim their passport. On the day, they join the queue and see their ticket number, status and position, while staff call and serve tickets from a dashboard. To run it, create a virtual environment with `python -m venv .venv`, activate it (`.venv\Scripts\activate` on Windows), run `pip install -r requirements.txt`, then `flask --app app run --debug` and open http://127.0.0.1:5000.

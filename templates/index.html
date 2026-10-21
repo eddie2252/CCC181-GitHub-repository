@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p>Hello, {{ name }}!</p>
+
+  <p><a class="button" href="{{ url_for('join') }}">Join the queue</a></p>
+
+  <h2>Tickets in the queue</h2>
+  <ul class="tickets">
+    {% for t in tickets %}
+      <li><a href="{{ url_for('ticket', ticket_id=t.number) }}">#{{ t.number }}</a> {{ t.name }}</li>
+    {% else %}
+      <li>The queue is empty.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
