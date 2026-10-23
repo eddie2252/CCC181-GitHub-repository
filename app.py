@@ -45,13 +45,41 @@ def index():
     return render_template("index.html", name="Ana", tickets=TICKETS)
 
 
-@app.route("/queue/<int:ticket_id>")
+@app.route('/queue/<int:ticket_id>')
+@app.route('/ticket/<int:ticket_id>')
 def ticket(ticket_id):
-    # <int:ticket_id> only matches numbers, so /queue/abc returns 404.
-    for position, t in enumerate(TICKETS, start=1):
-        if t["number"] == ticket_id:
-            return render_template("ticket.html", ticket=t, position=position)
-    abort(404)  # no ticket with that number
+    ticket_item = next((t for t in TICKETS if t.get('number') == ticket_id or t.get('id') == ticket_id), None)
+    if not ticket_item:
+        flash("Ticket not found.", "danger")
+        return redirect(url_for('join_form'))
+
+    service = next((s for s in SERVICES if s['id'] == ticket_item['service_id']), None)
+    service_name = service['name'] if service else "General Service"
+
+    people_ahead = sum(
+        1 for t in TICKETS 
+        if t['status'] == 'waiting' and t.get('number', 0) < ticket_id
+    )
+
+    slot = next((s for s in APPOINTMENT_SLOTS if s['value'] == ticket_item.get('appointment_time')), None)
+    slot_label = slot['label'] if slot else ticket_item.get('appointment_time', '')
+
+    return render_template(
+        'ticket.html', 
+        ticket=ticket_item, 
+        service_name=service_name, 
+        people_ahead=people_ahead,
+        slot_label=slot_label
+    )
+
+
+@app.route('/queue/<int:ticket_id>/leave', methods=['POST'])
+def leave_queue(ticket_id):
+    ticket_item = next((t for t in TICKETS if t.get('number') == ticket_id or t.get('id') == ticket_id), None)
+    if ticket_item and ticket_item['status'] in ['waiting', 'called']:
+        ticket_item['status'] = 'no-show'
+        flash("You have left the queue.", "info")
+    return redirect(url_for('join_form'))
 
 
 @app.get("/join")
