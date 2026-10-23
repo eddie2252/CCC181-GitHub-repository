@@ -1,16 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <p>Hello, {{ name }}!</p>
+  <h1>Welcome to EDfly</h1>
+  <p>Book your passport appointment online, get your ticket online, and see your place in line.</p>
 
-  <p><a class="button" href="{{ url_for('join') }}">Join the queue</a></p>
-
-  <h2>Tickets in the queue</h2>
-  <ul class="tickets">
-    {% for t in tickets %}
-      <li><a href="{{ url_for('ticket', ticket_id=t.number) }}">#{{ t.number }}</a> {{ t.name }}</li>
-    {% else %}
-      <li>The queue is empty.</li>
-    {% endfor %}
-  </ul>
+ <p><a class="btn btn-primary btn-lg" href="{{ url_for('join_form') }}">Join the queue</a></p>
 {% endblock %}
+

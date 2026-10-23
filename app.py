@@ -4,9 +4,9 @@ Run it with:
     flask --app app run --debug
 then open http://127.0.0.1:5000
 """
-from flask import Flask, abort, redirect, render_template, request, url_for
-
+from flask import Flask, abort, flash, redirect, render_template, request, url_for
 app = Flask(__name__)
+app.secret_key = "dev-only-change-me" 
 
 
 SERVICES = [
@@ -45,20 +45,14 @@ def ticket(ticket_id):
     abort(404)  # no ticket with that number
 
 
-@app.route("/join", methods=["GET", "POST"])
-def join():
-    # GET: show the empty form. POST: the form was submitted.
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        if not name:
-            return render_template("join.html", error="Please enter your name.")
-
-        number = TICKETS[-1]["number"] + 1 if TICKETS else 1
-        TICKETS.append({"number": number, "name": name})
-        # Redirect after POST so refreshing the page doesn't join twice.
-        return redirect(url_for("ticket", ticket_id=number))
-
+@app.route("/join")
+def join_form():
     return render_template("join.html")
+
+
+@app.route("/staff")
+def staff_dashboard():
+    return "Staff dashboard coming soon"
 
 
 @app.route("/hello")
