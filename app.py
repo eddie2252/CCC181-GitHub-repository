@@ -28,13 +28,13 @@ APPOINTMENT_SLOTS = [
 TICKETS = [
     {"number": 1, "name": "Raven Lamis", "email": "raven.lamis@example.com",
      "service_id": 1, "status": "waiting",
-     "appointment_date": "2026-10-26", "appointment_time": "09:00"},
-    {"number": 2, "name": "Kijo Dela Vega", "email": "kijo.delavega@example.com",
+          "appointment_date": "2026-10-26", "appointment_time": "09:00"},
+    {"number": 2, "name": "Kijo Delavega", "email": "kijo.delavega@example.com",
      "service_id": 2, "status": "waiting",
-     "appointment_date": "2026-10-26", "appointment_time": "09:30"},
+     "appointment_date": "2026-10-26", "appointment_time": "09:00"},
     {"number": 3, "name": "Winchester Cosning", "email": "winchester.cosning@example.com",
      "service_id": 3, "status": "waiting",
-     "appointment_date": "2026-10-26", "appointment_time": "10:00"},
+     "appointment_date": "2026-10-26", "appointment_time": "11:00"},
 ]
 
 
@@ -50,15 +50,15 @@ def index():
 def ticket(ticket_id):
     ticket_item = next((t for t in TICKETS if t.get('number') == ticket_id or t.get('id') == ticket_id), None)
     if not ticket_item:
-        flash("Ticket not found.", "danger")
-        return redirect(url_for('join_form'))
+        abort(404)
 
     service = next((s for s in SERVICES if s['id'] == ticket_item['service_id']), None)
     service_name = service['name'] if service else "General Service"
 
     people_ahead = sum(
         1 for t in TICKETS 
-        if t['status'] == 'waiting' and t.get('number', 0) < ticket_id
+        if t['service_id'] == ticket_item['service_id']
+        and t['status'] == 'waiting' and t.get('number', 0) < ticket_id
     )
 
     slot = next((s for s in APPOINTMENT_SLOTS if s['value'] == ticket_item.get('appointment_time')), None)
@@ -134,7 +134,72 @@ def join():
 
 @app.route("/staff")
 def staff_dashboard():
-    return "Staff dashboard coming soon"
+    service_filter = request.args.get("service_id", type=int)
+    slot_filter = request.args.get("slot", "")
+    
+    filtered_tickets = [t for t in TICKETS if t["status"] in ("waiting", "called")]
+    if service_filter:
+        filtered_tickets = [t for t in filtered_tickets if t["service_id"] == service_filter]
+    if slot_filter:
+        filtered_tickets = [t for t in filtered_tickets if t["appointment_time"] == slot_filter]
+
+    # Enrich tickets with human-readable service name and appointment slot label
+    display_tickets = []
+    for t in filtered_tickets:
+        service = next((s for s in SERVICES if s["id"] == t["service_id"]), None)
+        slot = next((s for s in APPOINTMENT_SLOTS if s["value"] == t.get("appointment_time")), None)
+        display_tickets.append({
+            **t,
+            "service_name": service["name"] if service else "General Service",
+            "slot_label": slot["label"] if slot else t.get("appointment_time", "")
+        })
+
+    return render_template(
+        "staff.html", 
+        tickets=display_tickets, 
+        services=SERVICES, 
+        selected_service=service_filter,
+        slots=APPOINTMENT_SLOTS,
+        selected_slot=slot_filter
+    )
+
+
+@app.post("/staff/call")
+def call_next():
+    service_filter = request.form.get("service_id", type=int)
+    slot_filter = request.form.get("slot", "")
+    
+    # Find the first ticket waiting in line
+    next_ticket = next(
+        (t for t in TICKETS if t["status"] == "waiting" and (not service_filter or t["service_id"] == service_filter) and (not slot_filter or t["appointment_time"] == slot_filter)),
+        None
+    )
+    if next_ticket:
+        next_ticket["status"] = "called"
+        ticket_num = next_ticket.get("number") or next_ticket.get("id")
+        flash(f"Called Ticket #{ticket_num} ({next_ticket['name']}).", "success")
+    else:
+        flash("No tickets waiting in queue.", "info")
+        
+    return redirect(url_for("staff_dashboard", service_id=service_filter or None, slot=slot_filter or None))
+
+
+@app.post("/staff/serve/<int:ticket_id>")
+def mark_served(ticket_id):
+    ticket_item = next((t for t in TICKETS if t.get("number") == ticket_id or t.get("id") == ticket_id), None)
+    if ticket_item:
+        ticket_item["status"] = "served"
+        flash(f"Ticket #{ticket_id} marked as Served.", "success")
+    return redirect(url_for("staff_dashboard"))
+
+
+@app.post("/staff/noshow/<int:ticket_id>")
+def mark_noshow(ticket_id):
+    ticket_item = next((t for t in TICKETS if t.get("number") == ticket_id or t.get("id") == ticket_id), None)
+    if ticket_item:
+        ticket_item["status"] = "no-show"
+        flash(f"Ticket #{ticket_id} marked as No-Show.", "warning")
+    return redirect(url_for("staff_dashboard"))
 
 
 @app.route("/hello")
