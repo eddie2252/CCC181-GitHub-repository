@@ -22,18 +22,19 @@
           {% endif %}
         </div>
 
+        <div id="live-status" aria-live="polite">
         <!-- Status Badge -->
         <div class="mb-4">
           {% if ticket.status == 'waiting' %}
-            <span class="badge bg-warning text-dark fs-5 px-4 py-2">WAITING</span>
+            <span id="status-badge" class="badge bg-warning text-dark fs-5 px-4 py-2">WAITING</span>
           {% elif ticket.status == 'called' %}
-            <span class="badge bg-info text-dark fs-5 px-4 py-2">CALLED</span>
+            <span id="status-badge" class="badge bg-info text-dark fs-5 px-4 py-2">CALLED</span>
           {% elif ticket.status == 'served' %}
-            <span class="badge bg-success fs-5 px-4 py-2">SERVED</span>
+            <span id="status-badge" class="badge bg-success fs-5 px-4 py-2">SERVED</span>
           {% elif ticket.status == 'no-show' %}
-            <span class="badge bg-danger fs-5 px-4 py-2">NO-SHOW</span>
+            <span id="status-badge" class="badge bg-danger fs-5 px-4 py-2">NO-SHOW</span>
           {% else %}
-            <span class="badge bg-secondary fs-5 px-4 py-2">{{ ticket.status|upper }}</span>
+            <span id="status-badge" class="badge bg-secondary fs-5 px-4 py-2">{{ ticket.status|upper }}</span>
           {% endif %}
         </div>
 
@@ -54,6 +55,7 @@
             {% endif %}
           </p>
         {% endif %}
+        </div>
 
         <!-- Optional Action: Leave Queue -->
         {% if ticket.status in ['waiting', 'called'] %}
@@ -69,4 +71,35 @@
 
   </div>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.number) }}";
+  async function refreshStatus() {
+    try {
+      const res = await fetch(statusUrl);
+      if (!res.ok) return;
+      const data = await res.json();
+      document.getElementById("status-badge").textContent = data.status.toUpperCase();
+
+      const aheadText = document.getElementById("ahead-text");
+      if (aheadText) {
+        let message;
+        if (data.ahead === 0) {
+          message = "You are next in line!";
+        } else if (data.ahead === 1) {
+          message = "1 person ahead of you";
+        } else {
+          message = `${data.ahead} people ahead of you`;
+        }
+        aheadText.querySelector("strong").textContent = message;
+      }
+    } catch (err) {
+      console.warn("Could not refresh status", err);
+    }
+  }
+  setInterval(refreshStatus, 10000);
+</script>
 {% endblock %}
