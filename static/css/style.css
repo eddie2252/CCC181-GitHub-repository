@@ -59,3 +59,7 @@ h2 {
 .text-secondary {
   color: var(--secondary) !important;
 }
+
+.btn {
+  min-height: 44px;
+}

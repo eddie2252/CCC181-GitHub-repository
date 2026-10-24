@@ -34,7 +34,7 @@
           <input type="hidden" name="service_id" value="{{ selected_service }}">
         {% endif %}
         {% if selected_slot %}<input type="hidden" name="slot" value="{{ selected_slot }}">{% endif %}
-        <button type="submit" class="btn btn-primary fw-bold text-nowrap">
+        <button type="submit" class="btn btn-primary btn-lg fw-bold text-nowrap">
           CALL NEXT TICKET
         </button>
       </form>
@@ -82,12 +82,12 @@
                     {% if ticket.status in ['waiting', 'called'] %}
                       <div class="btn-group btn-group-sm" role="group" aria-label="Ticket actions for #{{ ticket.number or ticket.id }}">
                         <form method="POST" action="{{ url_for('mark_served', ticket_id=ticket.number or ticket.id) }}" class="d-inline">
-                          <button type="submit" class="btn btn-success btn-sm me-1" aria-label="Mark ticket {{ ticket.number or ticket.id }} as served">
+                          <button type="submit" class="btn btn-success me-1" aria-label="Mark ticket {{ ticket.number or ticket.id }} as served">
                             Serve
                           </button>
                         </form>
                         <form method="POST" action="{{ url_for('mark_noshow', ticket_id=ticket.number or ticket.id) }}" class="d-inline">
-                          <button type="submit" class="btn btn-outline-danger btn-sm" aria-label="Mark ticket {{ ticket.number or ticket.id }} as no-show">
+                          <button type="submit" class="btn btn-outline-danger text-nowrap" aria-label="Mark ticket {{ ticket.number or ticket.id }} as no-show">
                             No Show
                           </button>
                         </form>
