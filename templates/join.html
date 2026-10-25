@@ -45,34 +45,22 @@
         {% endif %}
       </div>
 
-      <div class="row">
-        <div class="col-12 col-md-6 mb-3">
-          <label for="appointment_date" class="form-label">Appointment date</label>
-          <input id="appointment_date" name="appointment_date" type="date" required
-                 class="form-control {% if errors and errors.appointment_date %}is-invalid{% endif %}"
-                 value="{{ form.get('appointment_date', '') }}"
-                 {% if errors and errors.appointment_date %}aria-describedby="appointment_date-error"{% endif %}>
-          {% if errors and errors.appointment_date %}
-            <div id="appointment_date-error" class="invalid-feedback">{{ errors.appointment_date }}</div>
-          {% endif %}
-        </div>
+    <div class="mb-3">
+        <label for="appointment_time" class="form-label">Appointment time (today, {{ today }})</label>
+        <select id="appointment_time" name="appointment_time" required
+                class="form-select {% if errors and errors.appointment_time %}is-invalid{% endif %}"
+                {% if errors and errors.appointment_time %}aria-describedby="appointment_time-error"{% endif %}>
+          <option value="">Choose a time slot…</option>
+          {% for slot in slots %}
+            <option value="{{ slot['value'] }}"
+              {% if form.get('appointment_time') == slot['value'] %}selected{% endif %}>{{ slot['label'] }}</option>
+          {% endfor %}
+        </select>
+        {% if errors and errors.appointment_time %}
+          <div id="appointment_time-error" class="invalid-feedback">{{ errors.appointment_time }}</div>
+        {% endif %}
+    </div>
 
-        <div class="col-12 col-md-6 mb-3">
-          <label for="appointment_time" class="form-label">Appointment time</label>
-          <select id="appointment_time" name="appointment_time" required
-                  class="form-select {% if errors and errors.appointment_time %}is-invalid{% endif %}"
-                  {% if errors and errors.appointment_time %}aria-describedby="appointment_time-error"{% endif %}>
-            <option value="">Choose a time slot…</option>
-            {% for slot in slots %}
-              <option value="{{ slot['value'] }}"
-                {% if form.get('appointment_time') == slot['value'] %}selected{% endif %}>{{ slot['label'] }}</option>
-            {% endfor %}
-          </select>
-          {% if errors and errors.appointment_time %}
-            <div id="appointment_time-error" class="invalid-feedback">{{ errors.appointment_time }}</div>
-          {% endif %}
-        </div>
-      </div>
 
       <button type="submit" class="btn btn-primary btn-lg w-100">Get a ticket</button>
     </form>

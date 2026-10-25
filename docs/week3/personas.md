@@ -6,7 +6,7 @@
 
 | | |
 | --- | --- |
-| **Photo or sketch** | [A drawing, an icon, or a free stock photo. Never a photo of the real person you interviewed.] |
+| **Photo or sketch** | (screenshots/KijoDelavega.png) |
 | **Age, role and background** | 20, 3rd-year college student, attending lectures and commuting between campus and the consular site  |
 | **Goals** | 1. Obtain a passport as a primary government ID and prepare early for post-graduation overseas nursing requirements. 2. Monitor his queue position remotely so he doesn't have to wait in a crowded lobby during study hours.<3. Reach the counter window right on time without missing his afternoon lecture or clinical endorsement.|
 | **Frustrations** | 	1. Standing in a crowded hall without knowing if this is the right counter.  2. Not being sure which of the forms and counters apply to him.  3. Missing his priority number being called because the hall is noisy. |
@@ -21,7 +21,6 @@ Kijo arrives near the consular service office at 10:15 AM during a 2-hour break 
 ### Top tasks in the app
 
 | Task | Screen | Requirement ID |
-Task | Screen | Requirement ID |
 | --- | --- | --- |
 | Join the queue with appointment details | Join | FR-01 |
 | Check live queue position and status | My place | FR-02 |
@@ -42,7 +41,7 @@ Task | Screen | Requirement ID |
 
 | | |
 | --- | --- |
-| **Photo or sketch** | ![Stock portrait of a consular staff officer](https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80) |
+| **Photo or sketch** | (screenshots/ElenaLamis.png)|
 | **Age, role and background** | 42, Senior Consular Officer, handling passport renewals and claim processing at Window 3 for 8 hours daily |
 | **Goals** | 1. See who is next in line without asking around. 2. Call and serve people with as few clicks as possible. 3. Handle one type of service at a time (new, renewal or claiming).
 | **Frustrations** | 1. Applicants walk up not knowing if they are in the right line. 2. People who don't come when called slow the whole queue. 3. Cluttered or high-density software tables that lead to misclicks when switching focus between physical paper forms and screen controls |

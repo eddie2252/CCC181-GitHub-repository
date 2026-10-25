@@ -1,52 +1,5 @@
 <!doctype html>
 <html lang="en">
-<style>
-  :root {
-    --bs-body-bg: #F5F6F7;
-    --bs-body-color: #171A21;
-    --bs-border-color: #D9DDE3;
-  }
-
-  body {
-    background-color: #F5F6F7;
-    color: #171A21;
-  }
-
-  /* Surface / Card styling */
-  .card {
-    background-color: #FFFFFF;
-    border: 1px solid #D9DDE3;
-    border-radius: 0.75rem;
-  }
-
-  /* Primary Action Buttons */
-  .btn-primary {
-    background-color: #374151;
-    border-color: #374151;
-    color: #FFFFFF;
-  }
-  .btn-primary:hover, .btn-primary:focus {
-    background-color: #171A21;
-    border-color: #171A21;
-  }
-
-  /* Navbar styling matching the dark slate header */
-  .navbar {
-    background-color: #171A21 !important;
-  }
-
-  /* Borders & Secondary text colors */
-  .border, .form-control, .form-select {
-    border-color: #D9DDE3;
-  }
-  .form-control:focus, .form-select:focus {
-    border-color: #374151;
-    box-shadow: 0 0 0 0.25rem rgba(55, 65, 81, 0.15);
-  }
-  .text-muted, .text-secondary {
-    color: #6B7280 !important;
-  }
-</style>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -58,7 +11,7 @@
 <body class="d-flex flex-column min-vh-100">
   <a class="visually-hidden-focusable" href="#main">Skip to main content</a>
 
-  <nav class="navbar navbar-expand-md bg-primary" data-bs-theme="dark">
+  <nav class="navbar navbar-expand-md bg-dark" data-bs-theme="dark">
     <div class="container">
       <a class="navbar-brand" href="{{ url_for('index') }}">EDfly</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse"

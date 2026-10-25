@@ -85,7 +85,8 @@ def leave_queue(ticket_id):
 @app.get("/join")
 def join_form():
     return render_template("join.html", services=SERVICES,
-                           slots=APPOINTMENT_SLOTS, form={})
+                           slots=APPOINTMENT_SLOTS, form={},
+                           today=date.today().strftime("%B %d, %Y"))
 
 
 @app.post("/join")
@@ -94,7 +95,7 @@ def join():
     name = form.get("name", "").strip()
     email = form.get("email", "").strip().lower()
     service_id = form.get("service_id", type=int)
-    appointment_date = form.get("appointment_date", "").strip()
+    appointment_date = date.today().isoformat()
     appointment_time = form.get("appointment_time", "").strip()
 
     errors = {}
@@ -105,14 +106,7 @@ def join():
     if service_id not in [s["id"] for s in SERVICES]:
         errors["service_id"] = "Choose a service."
 
-    if not appointment_date:
-        errors["appointment_date"] = "Choose your appointment date."
-    else:
-        try:
-            if date.fromisoformat(appointment_date) != date.today():
-                errors["appointment_date"] = "Appointment date must be today."
-        except ValueError:
-            errors["appointment_date"] = "Enter a valid date."
+
 
     if appointment_time not in [s["value"] for s in APPOINTMENT_SLOTS]:
         errors["appointment_time"] = "Choose an appointment time."
@@ -121,7 +115,8 @@ def join():
         flash("Please fix the highlighted fields.", "danger")
         return render_template("join.html", services=SERVICES,
                                slots=APPOINTMENT_SLOTS, form=form,
-                               errors=errors), 400
+                               errors=errors,
+                               today=date.today().strftime("%B %d, %Y")), 400
 
     number = TICKETS[-1]["number"] + 1 if TICKETS else 1
     TICKETS.append({"number": number, "name": name, "email": email,

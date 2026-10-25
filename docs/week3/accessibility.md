@@ -14,7 +14,7 @@ Issue and Fix : None
 ## 9b. Keyboard only
 
 **Join the queue from the home page:** I could see where the focus was at every step because each control gets a visible highlight. I reached every field and the "Get a ticket" button and submitted the form to get a ticket.
- **Staff dashboard and skip link:** Yes, i can see clearly where it went because it will be highlighted, on the staff dashboard I can access filter service and call a ticket and serve with no problem at all, the skip link is a big help in doing those jobs. so far as a techy person I found no problem using it at all.
+**Staff dashboard and skip link:** Yes, i can see clearly where it went because it will be highlighted, on the staff dashboard I can access filter service and call a ticket and serve with no problem at all, the skip link is a big help in doing those jobs. so far as a techy person I found no problem using it at all.
 
 
 ## 9c. Manual checklist
