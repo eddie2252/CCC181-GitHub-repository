@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}My Place - EDfly{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    
+    <h1 class="h2 mb-4 text-center fw-bold">My Place</h1>
+
+    <div class="card shadow-sm border-0 text-center p-4">
+      <div class="card-body">
+        <p class="text-uppercase text-muted fw-semibold mb-1">Ticket Number</p>
+        <h2 class="display-1 fw-bolder mb-3">#{{ ticket.number or ticket.id }}</h2>
+
+        <div class="mb-3">
+          <p class="mb-1 fs-5"><strong>Service:</strong> {{ service_name }}</p>
+          {% if ticket.appointment_date %}
+          <p class="text-muted mb-2">
+            <strong>Appt:</strong> {{ ticket.appointment_date }} at {{ slot_label }}
+          </p>
+          {% endif %}
+        </div>
+
+        <div id="live-status" aria-live="polite">
+        <!-- Status Badge -->
+        <div class="mb-4">
+          {% if ticket.status == 'waiting' %}
+            <span id="status-badge" class="badge bg-warning text-dark fs-5 px-4 py-2">WAITING</span>
+          {% elif ticket.status == 'called' %}
+            <span id="status-badge" class="badge bg-info text-dark fs-5 px-4 py-2">CALLED</span>
+          {% elif ticket.status == 'served' %}
+            <span id="status-badge" class="badge bg-success fs-5 px-4 py-2">SERVED</span>
+          {% elif ticket.status == 'no-show' %}
+            <span id="status-badge" class="badge bg-danger fs-5 px-4 py-2">NO-SHOW</span>
+          {% else %}
+            <span id="status-badge" class="badge bg-secondary fs-5 px-4 py-2">{{ ticket.status|upper }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Call Notification / Position -->
+        {% if ticket.status == 'called' %}
+          <div class="alert alert-warning fw-bold fs-5 mb-4" role="alert">
+            Proceed to Counter Window {{ ticket.counter or '1' }}!
+          </div>
+        {% elif ticket.status == 'waiting' %}
+          <p class="fs-5 text-secondary mb-4">
+            {% set count = ahead if ahead is defined else people_ahead %}
+            {% if count == 0 %}
+              <strong>You are next in line!</strong>
+            {% elif count == 1 %}
+              <strong>1 person ahead of you</strong>
+            {% else %}
+              <strong>{{ count }} people ahead of you</strong>
+            {% endif %}
+          </p>
+        {% endif %}
+        </div>
+
+        <!-- Optional Action: Leave Queue -->
+        {% if ticket.status in ['waiting', 'called'] %}
+        <form action="{{ url_for('leave_queue', ticket_id=ticket.number or ticket.id) }}" method="POST" class="d-grid mt-3">
+          <button type="submit" class="btn btn-outline-secondary btn-lg" onclick="return confirm('Are you sure you want to leave the queue?');">
+            Leave the queue
+          </button>
+        </form>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.number) }}";
+  async function refreshStatus() {
+    try {
+      const res = await fetch(statusUrl);
+      if (!res.ok) return;
+      const data = await res.json();
+      document.getElementById("status-badge").textContent = data.status.toUpperCase();
+
+      const aheadText = document.getElementById("ahead-text");
+      if (aheadText) {
+        let message;
+        if (data.ahead === 0) {
+          message = "You are next in line!";
+        } else if (data.ahead === 1) {
+          message = "1 person ahead of you";
+        } else {
+          message = `${data.ahead} people ahead of you`;
+        }
+        aheadText.querySelector("strong").textContent = message;
+      }
+    } catch (err) {
+      console.warn("Could not refresh status", err);
+    }
+  }
+  setInterval(refreshStatus, 10000);
+</script>
+{% endblock %}

@@ -1,0 +1,65 @@
+:root {
+  --bs-primary: #374151;
+  --bs-primary-rgb: 55, 65, 81;
+  --bs-body-bg: #F5F6F7;
+  --bs-body-color: #171A21;
+  --bs-border-color: #D9DDE3;
+
+
+  --navy: #171A21;
+  --paper: #F5F6F7;
+  --card: #FFFFFF;
+  --border: #D9DDE3;
+  --secondary: #6B7280;
+  --primary: #374151;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", Arial, sans-serif;
+  background-color: var(--paper);
+  color: var(--navy);
+}
+
+h2 {
+  color: var(--navy);
+}
+
+
+.card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--navy);
+  border-color: var(--navy);
+}
+
+.form-control,
+.form-select {
+  border-color: var(--border);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.25rem rgba(55, 65, 81, 0.15);
+}
+
+.text-muted,
+.text-secondary {
+  color: var(--secondary) !important;
+}
+
+.btn {
+  min-height: 44px;
+}

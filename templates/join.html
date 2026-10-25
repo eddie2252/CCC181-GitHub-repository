@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Join the queue · EDfly{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <h1 class="h3 mb-3">Join the queue</h1>
+
+    <form method="post" action="{{ url_for('join') }}" novalidate id="join-form">
+      <div class="mb-3">
+        <label for="name" class="form-label">Full name</label>
+        <input id="name" name="name" type="text" autocomplete="name" required
+               class="form-control {% if errors and errors.name %}is-invalid{% endif %}"
+               value="{{ form.get('name', '') }}"
+               {% if errors and errors.name %}aria-describedby="name-error"{% endif %}>
+        {% if errors and errors.name %}
+          <div id="name-error" class="invalid-feedback">{{ errors.name }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email address</label>
+        <input id="email" name="email" type="email" autocomplete="email" required
+               class="form-control {% if errors and errors.email %}is-invalid{% endif %}"
+               value="{{ form.get('email', '') }}"
+               {% if errors and errors.email %}aria-describedby="email-error"{% endif %}>
+        {% if errors and errors.email %}
+          <div id="email-error" class="invalid-feedback">{{ errors.email }}</div>
+        {% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label for="service_id" class="form-label">Passport service</label>
+        <select id="service_id" name="service_id" required
+                class="form-select {% if errors and errors.service_id %}is-invalid{% endif %}"
+                {% if errors and errors.service_id %}aria-describedby="service_id-error"{% endif %}>
+          <option value="">Choose a service…</option>
+          {% for s in services %}
+            <option value="{{ s.id }}"
+              {% if form.get('service_id') == s.id|string %}selected{% endif %}>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+        {% if errors and errors.service_id %}
+          <div id="service_id-error" class="invalid-feedback">{{ errors.service_id }}</div>
+        {% endif %}
+      </div>
+
+    <div class="mb-3">
+        <label for="appointment_time" class="form-label">Appointment time (today, {{ today }})</label>
+        <select id="appointment_time" name="appointment_time" required
+                class="form-select {% if errors and errors.appointment_time %}is-invalid{% endif %}"
+                {% if errors and errors.appointment_time %}aria-describedby="appointment_time-error"{% endif %}>
+          <option value="">Choose a time slot…</option>
+          {% for slot in slots %}
+            <option value="{{ slot['value'] }}"
+              {% if form.get('appointment_time') == slot['value'] %}selected{% endif %}>{{ slot['label'] }}</option>
+          {% endfor %}
+        </select>
+        {% if errors and errors.appointment_time %}
+          <div id="appointment_time-error" class="invalid-feedback">{{ errors.appointment_time }}</div>
+        {% endif %}
+    </div>
+
+
+      <button type="submit" class="btn btn-primary btn-lg w-100">Get a ticket</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
