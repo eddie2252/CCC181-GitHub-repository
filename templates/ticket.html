@@ -44,7 +44,7 @@
             Proceed to Counter Window {{ ticket.counter or '1' }}!
           </div>
         {% elif ticket.status == 'waiting' %}
-          <p class="fs-5 text-secondary mb-4">
+          <p id="ahead-text" class="fs-5 text-secondary mb-4">
             {% set count = ahead if ahead is defined else people_ahead %}
             {% if count == 0 %}
               <strong>You are next in line!</strong>
