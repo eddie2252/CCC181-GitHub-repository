@@ -229,8 +229,22 @@ def hello():
     # The plain-string version from the Routes slide.
     return "Hello, CCC181!"
 
+@app.cli.command("seed")
+def seed():
+    """Add the starting services if they are not there yet."""
+    starting = [
+        ("New passport application", 10),
+        ("Passport renewal", 10),
+        ("Passport claiming", 10),
+    ]
+    for name, minutes in starting:
+        exists = db.session.scalar(db.select(Service).filter_by(name=name))
+        if exists is None:
+            db.session.add(Service(name=name, avg_minutes=minutes))
+    db.session.commit()
+    print("Services are ready.")
+
 
 if __name__ == "__main__":
     # Lets you also start the app with: python app.py
     app.run(debug=True)
-
