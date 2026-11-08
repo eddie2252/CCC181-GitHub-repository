@@ -5,7 +5,10 @@
 {% block content %}
 <div class="container py-2">
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-    <h1 class="h2 fw-bold mb-0">Staff Dashboard</h1>
+    <div class="d-flex align-items-center gap-3">
+      <h1 class="h2 fw-bold mb-0">Staff Dashboard</h1>
+            <a class="btn btn-outline-dark d-inline-flex align-items-center text-nowrap" href="{{ url_for('services_list') }}">Manage services</a>
+    </div>
 
     <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
       <!-- Filter Dropdown -->
@@ -82,15 +85,20 @@
                   </td>
                   <td class="text-end pe-3">
                     {% if ticket.status in ['waiting', 'called'] %}
-                      <div class="btn-group btn-group-sm" role="group" aria-label="Ticket actions for #{{ ticket.id }}">
-                        <form method="POST" action="{{ url_for('mark_served', ticket_id=ticket.id) }}" class="d-inline">
-                          <button type="submit" class="btn btn-success me-1" aria-label="Mark ticket {{ ticket.id }} as served">
+                      <div class="d-inline-flex gap-1" role="group" aria-label="Ticket actions for #{{ ticket.id }}">
+                        <form method="POST" action="{{ url_for('staff_action', ticket_id=ticket.id, action='serve') }}" class="d-inline">
+                          <button type="submit" class="btn btn-success btn-sm" aria-label="Mark ticket {{ ticket.id }} as served">
                             Serve
                           </button>
                         </form>
-                        <form method="POST" action="{{ url_for('mark_noshow', ticket_id=ticket.id) }}" class="d-inline">
-                          <button type="submit" class="btn btn-outline-danger text-nowrap" aria-label="Mark ticket {{ ticket.id }} as no-show">
+                        <form method="POST" action="{{ url_for('staff_action', ticket_id=ticket.id, action='no-show') }}" class="d-inline">
+                          <button type="submit" class="btn btn-outline-danger btn-sm text-nowrap" aria-label="Mark ticket {{ ticket.id }} as no-show">
                             No Show
+                          </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('delete_ticket', ticket_id=ticket.id) }}" class="d-inline" data-confirm="Delete ticket {{ ticket.id }}? This cannot be undone.">
+                          <button type="submit" class="btn btn-outline-secondary btn-sm text-nowrap" aria-label="Delete ticket {{ ticket.id }}">
+                            Delete
                           </button>
                         </form>
                       </div>
