@@ -6,7 +6,7 @@ then open http://127.0.0.1:5000
 """
 
 import os
-from datetime import date
+from datetime import date, time
 
 from dotenv import load_dotenv
 from flask import Flask, abort, flash, redirect, render_template, request, url_for
@@ -27,11 +27,7 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 
-SERVICES = [
-    {"id": 1, "name": "New passport application"},
-    {"id": 2, "name": "Passport renewal"},
-    {"id": 3, "name": "Passport claiming"},
-]
+
 
 APPOINTMENT_SLOTS = [
     {"value": "09:00", "label": "09:00 AM to 11:00 AM"},
@@ -41,17 +37,7 @@ APPOINTMENT_SLOTS = [
 ]
 
 
-TICKETS = [
-    {"number": 1, "name": "Raven Lamis", "email": "raven.lamis@example.com",
-     "service_id": 1, "status": "waiting",
-          "appointment_date": "2026-10-26", "appointment_time": "09:00"},
-    {"number": 2, "name": "Kijo Delavega", "email": "kijo.delavega@example.com",
-     "service_id": 2, "status": "waiting",
-     "appointment_date": "2026-10-26", "appointment_time": "09:00"},
-    {"number": 3, "name": "Winchester Cosning", "email": "winchester.cosning@example.com",
-     "service_id": 3, "status": "waiting",
-     "appointment_date": "2026-10-26", "appointment_time": "11:00"},
-]
+
 
 
 @app.route("/")
@@ -98,10 +84,26 @@ def leave_queue(ticket_id):
     return redirect(url_for('join_form'))
 
 
+def all_services():
+    return db.session.scalars(db.select(Service).order_by(Service.name)).all()
+
+
+def all_slots():
+    return db.session.scalars(
+        db.select(AppointmentSlot).order_by(AppointmentSlot.start_time)).all()
+
+
+def slot_choices():
+    """The slots as the join form expects them: a value and a label."""
+    return [{"value": s.start_time.strftime("%H:%M"),
+             "label": f"{s.start_time.strftime('%I:%M %p')} to {s.end_time.strftime('%I:%M %p')}"}
+            for s in all_slots()]
+
+
 @app.get("/join")
 def join_form():
-    return render_template("join.html", services=SERVICES,
-                           slots=APPOINTMENT_SLOTS, form={},
+    return render_template("join.html", services=all_services(),
+                           slots=slot_choices(), form={},
                            today=date.today().strftime("%B %d, %Y"))
 
 
@@ -111,37 +113,43 @@ def join():
     name = form.get("name", "").strip()
     email = form.get("email", "").strip().lower()
     service_id = form.get("service_id", type=int)
-    appointment_date = date.today().isoformat()
+    service = db.session.get(Service, service_id) if service_id else None
     appointment_time = form.get("appointment_time", "").strip()
+    slot = next((s for s in all_slots()
+                 if s.start_time.strftime("%H:%M") == appointment_time), None)
 
     errors = {}
-    if not name:
-        errors["name"] = "Enter your name."
-    if "@" not in email:
+    if not name or len(name) > 80:
+        errors["name"] = "Enter your name (up to 80 characters)."
+    if "@" not in email or len(email) > 120:
         errors["email"] = "Enter a valid email address."
-    if service_id not in [s["id"] for s in SERVICES]:
+    if service is None:
         errors["service_id"] = "Choose a service."
-
-
-
-    if appointment_time not in [s["value"] for s in APPOINTMENT_SLOTS]:
+    if slot is None:
         errors["appointment_time"] = "Choose an appointment time."
 
     if errors:
         flash("Please fix the highlighted fields.", "danger")
-        return render_template("join.html", services=SERVICES,
-                               slots=APPOINTMENT_SLOTS, form=form,
-                               errors=errors,
+        return render_template("join.html", services=all_services(),
+                               slots=slot_choices(), form=form, errors=errors,
                                today=date.today().strftime("%B %d, %Y")), 400
 
-    number = TICKETS[-1]["number"] + 1 if TICKETS else 1
-    TICKETS.append({"number": number, "name": name, "email": email,
-                    "service_id": service_id, "status": "waiting",
-                    "appointment_date": appointment_date,
-                    "appointment_time": appointment_time})
-    flash(f"You joined the queue. Your ticket is #{number}.", "success")
-    return redirect(url_for("ticket", ticket_id=number))
+    user = db.session.scalar(db.select(User).filter_by(email=email))
+    if user is None:
+        user = User(name=name, email=email)
+    ticket = Ticket(user=user, service=service, appointment_slot=slot)
+    db.session.add(ticket)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash("Something went wrong saving your ticket. Please try again.", "danger")
+        return render_template("join.html", services=all_services(),
+                               slots=slot_choices(), form=form, errors={},
+                               today=date.today().strftime("%B %d, %Y")), 409
 
+    flash(f"You joined the queue. Your ticket is #{ticket.id}.", "success")
+    return redirect(url_for("ticket", ticket_id=ticket.id))
 
 @app.route("/staff")
 def staff_dashboard():
@@ -241,8 +249,14 @@ def seed():
         exists = db.session.scalar(db.select(Service).filter_by(name=name))
         if exists is None:
             db.session.add(Service(name=name, avg_minutes=minutes))
+    slots = [(time(9), time(11)), (time(11), time(13)),
+             (time(13), time(15)), (time(15), time(17))]
+    for start, end in slots:
+        exists = db.session.scalar(db.select(AppointmentSlot).filter_by(start_time=start))
+        if exists is None:
+            db.session.add(AppointmentSlot(start_time=start, end_time=end))
     db.session.commit()
-    print("Services are ready.")
+    print("Services and slots are ready.")
 
 
 if __name__ == "__main__":
