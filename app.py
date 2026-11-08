@@ -6,12 +6,12 @@ then open http://127.0.0.1:5000
 """
 
 import os
-from datetime import date, time
+from datetime import date, time, timedelta, timezone
 
 from dotenv import load_dotenv
 from flask import Flask, abort, flash, redirect, render_template, request, url_for
 from flask_migrate import Migrate
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.exc import IntegrityError
 
 from models import AppointmentSlot, Service, Ticket, User, db
@@ -25,6 +25,14 @@ app.config["SQLALCHEMY_ECHO"] = os.environ.get("SQLALCHEMY_ECHO") == "1"
 
 db.init_app(app)
 migrate = Migrate(app, db)
+
+PH_TIME = timezone(timedelta(hours=8))  # Philippine time has no daylight saving
+
+
+@app.template_filter("local")
+def local_time(value):
+    """Show a database time in Philippine time, e.g. Oct 26, 08:01 AM."""
+    return value.astimezone(PH_TIME).strftime("%b %d, %I:%M %p") if value else ""
 
 
 
@@ -44,35 +52,15 @@ APPOINTMENT_SLOTS = [
 def index():
     # render_template looks inside the templates/ folder and passes
     # keyword arguments to the template as variables.
-    return render_template("index.html", name="Ana", tickets=TICKETS)
+    return render_template("index.html", name="Ana")
 
 
 @app.route('/queue/<int:ticket_id>')
 @app.route('/ticket/<int:ticket_id>')
 def ticket(ticket_id):
-    ticket_item = next((t for t in TICKETS if t.get('number') == ticket_id or t.get('id') == ticket_id), None)
-    if not ticket_item:
-        abort(404)
-
-    service = next((s for s in SERVICES if s['id'] == ticket_item['service_id']), None)
-    service_name = service['name'] if service else "General Service"
-
-    people_ahead = sum(
-        1 for t in TICKETS 
-        if t['service_id'] == ticket_item['service_id']
-        and t['status'] == 'waiting' and t.get('number', 0) < ticket_id
-    )
-
-    slot = next((s for s in APPOINTMENT_SLOTS if s['value'] == ticket_item.get('appointment_time')), None)
-    slot_label = slot['label'] if slot else ticket_item.get('appointment_time', '')
-
-    return render_template(
-        'ticket.html', 
-        ticket=ticket_item, 
-        service_name=service_name, 
-        people_ahead=people_ahead,
-        slot_label=slot_label
-    )
+    t = db.get_or_404(Ticket, ticket_id)
+    return render_template("ticket.html", ticket=t, service=t.service,
+                           ahead=people_ahead(t))
 
 
 @app.route('/queue/<int:ticket_id>/leave', methods=['POST'])
@@ -98,6 +86,20 @@ def slot_choices():
     return [{"value": s.start_time.strftime("%H:%M"),
              "label": f"{s.start_time.strftime('%I:%M %p')} to {s.end_time.strftime('%I:%M %p')}"}
             for s in all_slots()]
+
+def people_ahead(t):
+    """Count waiting tickets for the same service that are served before t:
+    an earlier appointment slot, or the same slot and an earlier created_at."""
+    my_slot = t.appointment_slot
+    stmt = (db.select(func.count())
+            .select_from(Ticket)
+            .join(AppointmentSlot)
+            .where(Ticket.service_id == t.service_id,
+                   Ticket.status == "waiting",
+                   or_(AppointmentSlot.start_time < my_slot.start_time,
+                       and_(Ticket.appointment_slot_id == t.appointment_slot_id,
+                            Ticket.created_at < t.created_at))))
+    return db.session.scalar(stmt)
 
 
 @app.get("/join")
@@ -151,36 +153,25 @@ def join():
     flash(f"You joined the queue. Your ticket is #{ticket.id}.", "success")
     return redirect(url_for("ticket", ticket_id=ticket.id))
 
-@app.route("/staff")
+@app.get("/staff")
 def staff_dashboard():
-    service_filter = request.args.get("service_id", type=int)
-    slot_filter = request.args.get("slot", "")
-    
-    filtered_tickets = [t for t in TICKETS if t["status"] in ("waiting", "called")]
-    if service_filter:
-        filtered_tickets = [t for t in filtered_tickets if t["service_id"] == service_filter]
-    if slot_filter:
-        filtered_tickets = [t for t in filtered_tickets if t["appointment_time"] == slot_filter]
-
-    # Enrich tickets with human-readable service name and appointment slot label
-    display_tickets = []
-    for t in filtered_tickets:
-        service = next((s for s in SERVICES if s["id"] == t["service_id"]), None)
-        slot = next((s for s in APPOINTMENT_SLOTS if s["value"] == t.get("appointment_time")), None)
-        display_tickets.append({
-            **t,
-            "service_name": service["name"] if service else "General Service",
-            "slot_label": slot["label"] if slot else t.get("appointment_time", "")
-        })
-
-    return render_template(
-        "staff.html", 
-        tickets=display_tickets, 
-        services=SERVICES, 
-        selected_service=service_filter,
-        slots=APPOINTMENT_SLOTS,
-        selected_slot=slot_filter
-    )
+    service_id = request.args.get("service_id", type=int)
+    slot_value = request.args.get("slot", "")
+    stmt = (db.select(Ticket)
+            .join(AppointmentSlot)
+            .where(Ticket.status.in_(["waiting", "called"]))
+            .order_by(AppointmentSlot.start_time, Ticket.created_at))
+    if service_id:
+        stmt = stmt.where(Ticket.service_id == service_id)
+    if slot_value:
+        try:
+            stmt = stmt.where(AppointmentSlot.start_time == time.fromisoformat(slot_value))
+        except ValueError:
+            pass  # ignore a slot value that is not a time
+    queue = db.session.scalars(stmt).all()
+    return render_template("staff.html", tickets=queue, services=all_services(),
+                           selected_service=service_id, slots=slot_choices(),
+                           selected_slot=slot_value)
 
 
 @app.post("/staff/call")
@@ -222,14 +213,8 @@ def mark_noshow(ticket_id):
 
 @app.get("/queue/<int:ticket_id>/status.json")
 def ticket_status(ticket_id):
-    t = next((t for t in TICKETS if t["number"] == ticket_id), None)
-    if t is None:
-        abort(404)
-    ahead = sum(1 for x in TICKETS
-                if x["service_id"] == t["service_id"]
-                and x["status"] == "waiting" and x["number"] < t["number"])
-    return {"status": t["status"], "ahead": ahead}
-
+    t = db.get_or_404(Ticket, ticket_id)
+    return {"status": t.status, "ahead": people_ahead(t)}
 
 
 @app.route("/hello")

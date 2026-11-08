@@ -1,6 +1,6 @@
 # Schema review
 
-**Works well:** `tickets` stores only facts about one visit (`created_at`, `status`) and never a position, a count of people ahead or a waiting time. "Ahead" is computed as the number of `waiting` tickets in the same appointment slot with an earlier `created_at`, so it cannot go stale when someone is called, leaves or is marked no-show. Found by question 3.
+**Works well:** `tickets` stores only facts about one visit (`created_at`, `status`) and never a position, a count of people ahead or a waiting time. "Ahead" is computed as the number of `waiting` tickets for the same service that are in an earlier appointment slot, or in the same slot with an earlier `created_at`, so it cannot go stale when someone is called, leaves or is marked no-show. Found by question 3.
 **Problem:** Nothing stopped a double tap on Join from creating two open tickets for the same person and service. The second ticket would count as another person "ahead" for everyone behind it, which breaks FR-02. Found by question 4.
 **Change:** Added a partial unique index on `tickets (user_id, service_id)` where `status IN ('waiting', 'called')`, documented under 2c in `schema.md`. The ERD is unchanged, because dbdiagram cannot draw a partial index. `left` and `no-show` tickets are outside the index, so a person who left can join again.
 

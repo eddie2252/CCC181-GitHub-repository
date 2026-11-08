@@ -11,15 +11,15 @@
     <div class="card shadow-sm border-0 text-center p-4">
       <div class="card-body">
         <p class="text-uppercase text-muted fw-semibold mb-1">Ticket Number</p>
-        <h2 class="display-1 fw-bolder mb-3">#{{ ticket.number or ticket.id }}</h2>
+        <h2 class="display-1 fw-bolder mb-3">#{{ ticket.id }}</h2>
 
         <div class="mb-3">
-          <p class="mb-1 fs-5"><strong>Service:</strong> {{ service_name }}</p>
-          {% if ticket.appointment_date %}
-          <p class="text-muted mb-2">
-            <strong>Appt:</strong> {{ ticket.appointment_date }} at {{ slot_label }}
+          <p class="mb-1 fs-5"><strong>Service:</strong> {{ service.name }}</p>
+          <p class="text-muted mb-2">Joined {{ ticket.created_at|local }}</p>
+            <p class="text-muted mb-2">
+              <strong>Appt:</strong> {{ ticket.appointment_slot.start_time.strftime('%I:%M %p') }} to {{ ticket.appointment_slot.end_time.strftime('%I:%M %p') }}
+              
           </p>
-          {% endif %}
         </div>
 
         <div id="live-status" aria-live="polite">
@@ -59,7 +59,7 @@
 
         <!-- Optional Action: Leave Queue -->
         {% if ticket.status in ['waiting', 'called'] %}
-        <form action="{{ url_for('leave_queue', ticket_id=ticket.number or ticket.id) }}" method="POST" class="d-grid mt-3">
+        <form action="{{ url_for('leave_queue', ticket_id=ticket.id) }}" method="POST" class="d-grid mt-3">
           <button type="submit" class="btn btn-outline-secondary btn-lg" onclick="return confirm('Are you sure you want to leave the queue?');">
             Leave the queue
           </button>
@@ -76,7 +76,7 @@
 
 {% block scripts %}
 <script>
-  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.number) }}";
+  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.id) }}";
   async function refreshStatus() {
     try {
       const res = await fetch(statusUrl);

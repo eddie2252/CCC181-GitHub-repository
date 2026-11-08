@@ -53,6 +53,7 @@
               <th scope="col">Name</th>
               <th scope="col">Service</th>
               <th scope="col">Appt Slot ★</th>
+              <th scope="col">Joined</th>
               <th scope="col">Status</th>
               <th scope="col" class="text-end pe-3">Action</th>
             </tr>
@@ -61,10 +62,11 @@
             {% if tickets %}
               {% for ticket in tickets %}
                 <tr>
-                  <th scope="row" class="ps-3 fw-bold">{{ ticket.number or ticket.id }}</th>
-                  <td>{{ ticket.name }}</td>
-                  <td><span class="badge bg-light text-dark border">{{ ticket.service_name }}</span></td>
-                  <td><small class="text-muted fw-semibold">{{ ticket.slot_label or ticket.appointment_time }}</small></td>
+                  <th scope="row" class="ps-3 fw-bold">{{ ticket.id }}</th>
+                  <td>{{ ticket.user.name }}</td>
+                  <td><span class="badge bg-light text-dark border">{{ ticket.service.name }}</span></td>
+                  <td><small class="text-muted fw-semibold">{{ ticket.appointment_slot.start_time.strftime('%I:%M %p') }} to {{ ticket.appointment_slot.end_time.strftime('%I:%M %p') }}</small></td>
+                  <td><small class="text-muted">{{ ticket.created_at|local }}</small></td>
                   <td>
                     {% if ticket.status == 'waiting' %}
                       <span class="badge bg-warning text-dark">Waiting</span>
@@ -80,14 +82,14 @@
                   </td>
                   <td class="text-end pe-3">
                     {% if ticket.status in ['waiting', 'called'] %}
-                      <div class="btn-group btn-group-sm" role="group" aria-label="Ticket actions for #{{ ticket.number or ticket.id }}">
-                        <form method="POST" action="{{ url_for('mark_served', ticket_id=ticket.number or ticket.id) }}" class="d-inline">
-                          <button type="submit" class="btn btn-success me-1" aria-label="Mark ticket {{ ticket.number or ticket.id }} as served">
+                      <div class="btn-group btn-group-sm" role="group" aria-label="Ticket actions for #{{ ticket.id }}">
+                        <form method="POST" action="{{ url_for('mark_served', ticket_id=ticket.id) }}" class="d-inline">
+                          <button type="submit" class="btn btn-success me-1" aria-label="Mark ticket {{ ticket.id }} as served">
                             Serve
                           </button>
                         </form>
-                        <form method="POST" action="{{ url_for('mark_noshow', ticket_id=ticket.number or ticket.id) }}" class="d-inline">
-                          <button type="submit" class="btn btn-outline-danger text-nowrap" aria-label="Mark ticket {{ ticket.number or ticket.id }} as no-show">
+                        <form method="POST" action="{{ url_for('mark_noshow', ticket_id=ticket.id) }}" class="d-inline">
+                          <button type="submit" class="btn btn-outline-danger text-nowrap" aria-label="Mark ticket {{ ticket.id }} as no-show">
                             No Show
                           </button>
                         </form>
@@ -100,7 +102,7 @@
               {% endfor %}
             {% else %}
               <tr>
-                <td colspan="6" class="text-center py-4 text-muted">No tickets found in queue.</td>
+                <td colspan="7" class="text-center py-4 text-muted">No tickets found in queue.</td>
               </tr>
             {% endif %}
           </tbody>

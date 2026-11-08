@@ -17,7 +17,7 @@
 | FR-11 ★ | An applicant is told which **counter window** to go to when their ticket is called. | counter window | *(Later)* decide when it is built |
 | FR-12 | A staff member can see how many people **left** before being served, per service, per **day**. | left, day, count | *(computed from)* tickets.status, tickets.created_at |
 
-- **The queue is not a table.** It is all tickets with status `waiting` in one appointment slot, ordered by `created_at`.
+- **The queue is not a table.** It is all tickets with status `waiting` for one service, ordered by appointment slot, then `created_at`.`
 - **Store facts, not results.** "Ahead" and the counts are computed, never stored.
 
 ## 2b. Tables
@@ -55,7 +55,7 @@ A fact about the **person** goes in `users`, about the **service** in `services`
 | tickets | called_at | timestamptz | none (can be empty) | Empty until staff call the ticket |
 
 
-**Extra constraint (partial unique index):** `UNIQUE (user_id, service_id) WHERE status IN ('waiting', 'called')` on `tickets`. An applicant can hold only one open ticket per service. Tickets with status `served`, `no-show` or `left` are not counted, so the applicant can join again later.
+**Extra constraint (partial unique index):** `UNIQUE (user_id, service_id) WHERE status IN ('waiting', 'called')` on `tickets`. An applicant can hold only one open ticket per service. Tickets with status `served`, `no-show` or `left` are not counted, so the applicant can join again later.g
 
 ## 2d. ERD
 
